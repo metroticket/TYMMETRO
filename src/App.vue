@@ -112,7 +112,7 @@
               <div class="cell-main val-in">{{ currentStationDetail.todayIn.toLocaleString() }}</div>
               <div class="cell-sub">
                 比較日: {{ currentStationDetail.historyIn.toLocaleString() }}
-                <span :class="currentStationDetail.diffIn >= 0 ? 'text-green' : 'text-red'">
+                <span :class="currentStationDetail.diffIn >= 0 ? 'text-red' : 'text-green'">
                   ({{ currentStationDetail.diffIn >= 0 ? '+' : '' }}{{ currentStationDetail.rateIn }}%)
                 </span>
               </div>
@@ -122,7 +122,7 @@
               <div class="cell-main val-out">{{ currentStationDetail.todayOut.toLocaleString() }}</div>
               <div class="cell-sub">
                 比較日: {{ currentStationDetail.historyOut.toLocaleString() }}
-                <span :class="currentStationDetail.diffOut >= 0 ? 'text-green' : 'text-red'">
+                <span :class="currentStationDetail.diffOut >= 0 ? 'text-red' : 'text-green'">
                   ({{ currentStationDetail.diffOut >= 0 ? '+' : '' }}{{ currentStationDetail.rateOut }}%)
                 </span>
               </div>
@@ -403,8 +403,8 @@ const updateStationMarkersData = () => {
     const rateIn = historyIn > 0 ? (((todayIn - historyIn) / historyIn) * 100).toFixed(1) : '0';
     const rateOut = historyOut > 0 ? (((todayOut - historyOut) / historyOut) * 100).toFixed(1) : '0';
 
-    elObj.tooltipIn.innerHTML = `進: <strong>${todayIn.toLocaleString()}</strong> <small>(同期 ${historyIn.toLocaleString()} <span class="${Number(rateIn)>=0?'text-green':'text-red'}">${Number(rateIn)>=0?'+':''}${rateIn}%</span>)</small>`;
-    elObj.tooltipOut.innerHTML = `出: <strong>${todayOut.toLocaleString()}</strong> <small>(同期 ${historyOut.toLocaleString()} <span class="${Number(rateOut)>=0?'text-green':'text-red'}">${Number(rateOut)>=0?'+':''}${rateOut}%</span>)</small>`;
+    elObj.tooltipIn.innerHTML = `進: <strong>${todayIn.toLocaleString()}</strong> <small>(同期 ${historyIn.toLocaleString()} <span class="${Number(rateIn)>=0? 'text-red' : 'text-green'}">${Number(rateIn)>=0?'+':''}${rateIn}%</span>)</small>`;
+    elObj.tooltipOut.innerHTML = `出: <strong>${todayOut.toLocaleString()}</strong> <small>(同期 ${historyOut.toLocaleString()} <span class="${Number(rateOut)>=0? 'text-red' : 'text-green'}">${Number(rateOut)>=0?'+':''}${rateOut}%</span>)</small>`;
 
     if (count >= 150) {
       elObj.bubbleEl.classList.add('high-density');
@@ -1405,8 +1405,8 @@ html, body, #app {
   color: #38bdf8;
   margin-top: 2px;
 }
-.val-in { color: #34d399; }
-.val-out { color: #f87171; }
+.val-in { color: #fbbf24; }
+.val-out { color: #c084fc; }
 
 /* ⭐ 站點運量檢視抽屜 / 排行榜樣式（整體加大、單行不換行） */
 .station-drawer-box {
@@ -1512,12 +1512,12 @@ html, body, #app {
 }
 
 .rank-sub-in { 
-  color: #34d399; 
+  color: #fbbf24; 
   font-weight: 600;
 }
 
 .rank-sub-out { 
-  color: #f87171; 
+  color: #c084fc; 
   font-weight: 600;
 }
 
@@ -1584,8 +1584,8 @@ html, body, #app {
   font-family: monospace;
 }
 
-.text-green { color: #34d399; font-weight: 700; }
-.text-red { color: #f87171; font-weight: 700; }
+.text-red { color: #f87171; font-weight: 700; }   /* 正值 / 上漲 */
+.text-green { color: #34d399; font-weight: 700; } /* 負值 / 下跌 */
 
 .time-control-box {
   background: rgba(0, 0, 0, 0.3);
