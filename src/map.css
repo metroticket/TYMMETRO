@@ -1,0 +1,421 @@
+/* ==================== 1. 全局容器與 MapLibre 畫布 ==================== */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.metro-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#map .maplibregl-canvas-container canvas {
+  filter: grayscale(100%) brightness(108%) contrast(80%) opacity(0.85);
+}
+
+/* ==================== 2. 頂層 SVG 雙軌與列車圖層 ==================== */
+#svg-track-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none !important;
+  z-index: 10;
+  shape-rendering: geometricPrecision;
+}
+
+#svg-track-layer path {
+  pointer-events: none !important;
+}
+
+.track-glow-blue {
+  fill: none;
+  stroke: #0284c7;
+  stroke-width: 8px;
+  stroke-opacity: 0.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.track-core-blue {
+  fill: none;
+  stroke: #0284c7;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.track-glow-purple {
+  fill: none;
+  stroke: #9333ea;
+  stroke-width: 8px;
+  stroke-opacity: 0.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.track-core-purple {
+  fill: none;
+  stroke: #9333ea;
+  stroke-width: 3.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 列車外觀樣式 */
+.svg-train { pointer-events: none; }
+.train-exp .train-halo {
+  fill: #c084fc; fill-opacity: 0.5; filter: drop-shadow(0 0 6px #9333ea);
+}
+.train-exp .train-core { fill: #9333ea; stroke: #ffffff; stroke-width: 1.5px; }
+.train-exp .train-arrow { fill: #9333ea; stroke: #ffffff; stroke-width: 1px; }
+
+.train-com .train-halo {
+  fill: #38bdf8; fill-opacity: 0.5; filter: drop-shadow(0 0 6px #0284c7);
+}
+.train-com .train-core { fill: #0284c7; stroke: #ffffff; stroke-width: 1.5px; }
+.train-com .train-arrow { fill: #0284c7; stroke: #ffffff; stroke-width: 1px; }
+
+.train-text {
+  font-size: 11px;
+  font-weight: 800;
+  fill: #0f172a;
+  text-anchor: middle;
+  stroke: #ffffff;
+  stroke-width: 2.5px;
+  paint-order: stroke fill;
+}
+
+.waiting .train-halo {
+  animation: svg-pulse 1.2s infinite alternate ease-in-out;
+}
+@keyframes svg-pulse {
+  0% { r: 6px; fill-opacity: 0.3; }
+  100% { r: 15px; fill-opacity: 0.8; }
+}
+
+/* ==================== 3. 車站圓點、避障引線與膠囊標籤 ==================== */
+.station-marker-container {
+  position: absolute;
+  pointer-events: none !important;
+  z-index: 5;
+}
+
+.station-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  z-index: 6;
+}
+
+.dot-commuter {
+  border: 2px solid #0284c7;
+}
+
+.dot-express {
+  border: 2px solid #9333ea;
+  width: 10px;
+  height: 10px;
+}
+
+.leader-line {
+  position: absolute;
+  background: rgba(148, 163, 184, 0.65) !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.station-flow-capsule {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  padding: 3px 9px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  white-space: nowrap;
+  pointer-events: auto !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.station-flow-capsule:hover {
+  border-color: #38bdf8;
+  transform: scale(1.08) !important;
+  z-index: 80;
+}
+
+.st-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.8px;
+}
+
+.st-live-count {
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.station-flow-capsule.high-density {
+  border-color: rgba(244, 63, 94, 0.6) !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+.station-flow-capsule.high-density .st-live-count {
+  color: #fb7185 !important;
+}
+
+/* ==================== 4. 車站微型懸停/鎖定卡片 (.station-hover-card) ==================== */
+.station-hover-card {
+  position: absolute;
+  min-width: 220px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  backdrop-filter: blur(14px);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+/* 懸停 (:hover) 或點擊鎖定 (.is-pinned) 時顯示 */
+.station-flow-capsule:hover .station-hover-card,
+.station-flow-capsule.is-pinned .station-hover-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* 手動按 ✕ 關閉時強制隱藏 */
+.station-flow-capsule.is-dismissed .station-hover-card {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.station-flow-capsule.is-pinned {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8) !important;
+  z-index: 999 !important;
+}
+
+.th-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 5px;
+  margin-bottom: 6px;
+}
+
+.th-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #38bdf8;
+  margin: 0;
+  padding: 0;
+}
+
+.th-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.th-close-btn:hover {
+  color: #f43f5e;
+}
+
+.th-row {
+  font-size: 13px;
+  color: #cbd5e1;
+  font-family: monospace;
+  line-height: 1.6;
+}
+.th-row strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+.th-row small {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 6px;
+}
+
+.th-action-row {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.th-overview-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.th-overview-btn:hover {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+/* ==================== 5. 車站五向避障引線與卡片座標反推 ==================== */
+.pos-top .leader-line {
+  left: 50%;
+  bottom: 0;
+  width: 1px;
+  height: 38px;
+  transform: translateX(-50%);
+}
+.pos-top .station-flow-capsule {
+  left: 50%;
+  bottom: 38px;
+  transform: translateX(-50%);
+}
+.pos-top .station-hover-card {
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.pos-top .station-flow-capsule:hover .station-hover-card,
+.pos-top .station-flow-capsule.is-pinned .station-hover-card {
+  transform: translateX(-50%) translateY(-4px) !important;
+}
+
+.pos-bottom .leader-line {
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 38px;
+  transform: translateX(-50%);
+}
+.pos-bottom .station-flow-capsule {
+  left: 50%;
+  top: 38px;
+  transform: translateX(-50%);
+}
+.pos-bottom .station-hover-card {
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.pos-bottom .station-flow-capsule:hover .station-hover-card,
+.pos-bottom .station-flow-capsule.is-pinned .station-hover-card {
+  transform: translateX(-50%) translateY(4px) !important;
+}
+
+.pos-left .leader-line {
+  top: 50%;
+  right: 0;
+  height: 1px;
+  width: 45px;
+  transform: translateY(-50%);
+}
+.pos-left .station-flow-capsule {
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.pos-left .station-hover-card {
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.pos-left .station-flow-capsule:hover .station-hover-card,
+.pos-left .station-flow-capsule.is-pinned .station-hover-card {
+  transform: translateY(-50%) translateX(-4px) !important;
+}
+
+.pos-right .leader-line {
+  top: 50%;
+  left: 0;
+  height: 1px;
+  width: 48px;
+  transform: translateY(-50%);
+}
+.pos-right .station-flow-capsule {
+  left: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.pos-right .station-hover-card {
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.pos-right .station-flow-capsule:hover .station-hover-card,
+.pos-right .station-flow-capsule.is-pinned .station-hover-card {
+  transform: translateY(-50%) translateX(4px) !important;
+}
+
+.pos-top-left .leader-line {
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 48px;
+  transform-origin: top center;
+  transform: rotate(45deg);
+}
+.pos-top-left .station-flow-capsule {
+  right: 28px;
+  bottom: 28px;
+  transform: translate(0, 0);
+}
+.pos-top-left .station-hover-card {
+  right: calc(100% + 12px);
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+.pos-top-left .station-flow-capsule:hover .station-hover-card,
+.pos-top-left .station-flow-capsule.is-pinned .station-hover-card {
+  transform: translateY(-50%) translateX(-4px) !important;
+}
